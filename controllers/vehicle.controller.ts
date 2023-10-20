@@ -1,13 +1,13 @@
 import { Request, Response } from "express";
-import { selectAddress } from "../models/address.model";
+import { selectVehicle } from "../models/vehicle.model";
 
-export const getAddress = async (req: Request, res: Response) => {
+export const getVehicle = async (req: Request, res: Response) => {
   try {
     const query = req.query;
     const filter = `%${query.filter}%`;
     const page = query.page;
     if (typeof filter == "string" && typeof page == "string") {
-      let data = await selectAddress(filter, page);
+      let data = await selectVehicle(filter, page);
       return res.status(200).json(data);
     }
     throw new Error("ใส่ Filter กับ Page พร้อมกันนะแจ๊ะ");

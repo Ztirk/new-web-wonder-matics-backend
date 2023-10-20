@@ -4,6 +4,9 @@ import { masterCodeRoute } from "./routes/masterCode.route";
 import { personRoute } from "./routes/person.route";
 import { authenticationRoute } from "./middlewares/authetication.middleware";
 import cors from "cors";
+import { addressRoute } from "./routes/address.route";
+import { deviceRoute } from "./routes/device.route";
+import { vehicleRoute } from "./routes/vehicle.route";
 
 const app = express();
 const port = 3000;
@@ -16,6 +19,9 @@ app.use(express.urlencoded({ extended: true })); // for parsing application/x-ww
 app.use("/customer", customerRoute);
 app.use("/person", personRoute);
 app.use("/master-code", masterCodeRoute);
+app.use("/address", addressRoute);
+app.use("/device", deviceRoute);
+app.use("/vehicle", vehicleRoute);
 
 app.listen(port, () => {
   console.log(`Example app listening on port:${port}`);

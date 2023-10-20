@@ -18,7 +18,6 @@ export const selectMasterCode = async (category: string, className: string) => {
               }`);
     return {
       masterCode: result.recordset,
-      noOfRows: result.rowsAffected[0],
     };
   } catch (err) {
     return err;

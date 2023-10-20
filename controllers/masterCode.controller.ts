@@ -6,12 +6,11 @@ export const getMasterCode = async (req: Request, res: Response) => {
     const query = req.query;
     let category = query.category;
     let className = query.class;
-    let data;
 
     if (typeof category === "string" && typeof className === "string") {
-      data = await selectMasterCode(category, className);
+      let data = await selectMasterCode(category, className);
+      return res.json(data);
     }
-    return res.json(data);
   } catch (err) {
     return res.json(err);
   }
