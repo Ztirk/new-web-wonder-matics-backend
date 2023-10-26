@@ -1,14 +1,15 @@
 import { Request, Response } from "express";
-import { selectAddress } from "../models/address.model";
+import { selectPackage } from "../models/package.model";
 
-export const getAddress = async (req: Request, res: Response) => {
-  console.log("GET /address");
+export const getPackage = async (req: Request, res: Response) => {
   try {
+    console.log("GET /package");
+
     const query = req.query;
     const filter = `%${query.filter}%`;
     const page = query.page;
     if (typeof query.filter == "string" && typeof page == "string") {
-      let data = await selectAddress(filter, page);
+      let data = await selectPackage(filter, page);
       console.log("Success");
       return res.status(200).json(data);
     }

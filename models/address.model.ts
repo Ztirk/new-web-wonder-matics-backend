@@ -15,7 +15,7 @@ export const selectAddress = async (filter: string, page: string) => {
                     ORDER BY a.Address_id ASC
                 ) no,
                 a.address_id,
-                COALESCE(a.name + ' ', '') + COALESCE(a.house_no + ' ', '') + COALESCE(a.village_no + ' ', '') + COALESCE(a.alley + ' ', '') + COALESCE(a.road + ' ', '') + COALESCE(a.sub_district + ' ', '') + COALESCE(a.district + ' ', '') + COALESCE(a.province + ' ', '') + COALESCE(a.postal_code + ' ', '') location,
+                COALESCE(a.name + ' ', '') + COALESCE(a.house_no + ' ', '') + COALESCE(a.village_no + ' ', '') + COALESCE(a.alley + ' ', '') + COALESCE(a.road + ' ', '') + COALESCE(a.sub_district + ' ', '') + COALESCE(a.district + ' ', '') + COALESCE(a.province + ' ', '') + COALESCE(a.postal_code, '') location,
                 STUFF(
                     (
                         SELECT ', ' + mc.value
@@ -28,7 +28,7 @@ export const selectAddress = async (filter: string, page: string) => {
                     ''
                 ) address_type
             FROM DevelopERP_ForTesting..Address a
-            WHERE COALESCE(a.name + ' ', '') + COALESCE(a.house_no + ' ', '') + COALESCE(a.village_no + ' ', '') + COALESCE(a.alley + ' ', '') + COALESCE(a.road + ' ', '') + COALESCE(a.sub_district + ' ', '') + COALESCE(a.district + ' ', '') + COALESCE(a.province + ' ', '') + COALESCE(a.postal_code + ' ', '') LIKE @filter
+            WHERE COALESCE(a.name + ' ', '') + COALESCE(a.house_no + ' ', '') + COALESCE(a.village_no + ' ', '') + COALESCE(a.alley + ' ', '') + COALESCE(a.road + ' ', '') + COALESCE(a.sub_district + ' ', '') + COALESCE(a.district + ' ', '') + COALESCE(a.province + ' ', '') + COALESCE(a.postal_code, '') LIKE @filter
         )
         SELECT *
         FROM Address
@@ -36,7 +36,7 @@ export const selectAddress = async (filter: string, page: string) => {
         `
       );
     return {
-      customer: result.recordset,
+      address: result.recordset,
     };
   } catch (err) {
     return { response: err };
