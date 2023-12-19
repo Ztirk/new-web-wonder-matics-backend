@@ -95,8 +95,7 @@ export const selectIndividualCustomer = async (customer_id: string) => {
         WHERE vc.customer_id = @customer_id
         `
       );
-       asdfadsfasfdas
-       wtfffffffff
+       //adjlskfjk;sadljfjksldfa
     if (Array.isArray(result.recordsets)) {
       return {
         customer: result.recordsets[0],
