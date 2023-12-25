@@ -1,4 +1,4 @@
-import sql, { ISqlType } from "mssql";
+import sql, { ISqlType, MSSQLError } from "mssql";
 import { devConfig } from "../config/devDb.config";
 import { customerMainColumn } from "../utils/customer.mainColumn";
 import { customerIndividualColumn } from "../utils/customer.individualColumn";
@@ -8,56 +8,34 @@ import { contactIndividualColumn } from "../utils/contact.individualColumn";
 import { addressMainColumn } from "../utils/address.mainColumn";
 import { fleetMainColumn } from "../utils/fleet.mainColumn";
 import { vehicleMainColumn } from "../utils/vehicle.mainColumn";
+import { InsertCustomer } from "../interfaces/customer.interface";
 
-export const selectCustomer = async (filter: string, page: string) => {
+export const selectCustomer = async (filter: string, page: number | null) => {
   try {
-    let pool = await sql.connect(devConfig);
-    let result = await pool
+    const pool = await sql.connect(devConfig);
+    const result = await pool
       .request()
       .input("filter", sql.NVarChar, filter)
       .input("page", sql.Int, page)
       .query(
         `
-        WITH Customer AS (
-          SELECT ${customerMainColumn}
-          FROM DevelopERP_ForTesting..Customer c
-          WHERE c.customer_name LIKE @filter
-      )
-      SELECT *
-      FROM Customer c
-      WHERE no BETWEEN (@page -1) * 10 + 1 AND (@page -1) * 10 + 10    
+        EXEC DevelopERP_ForKrit..select_customer @page, @filter
         `
       );
     return {
+      status: 1,
+      message: "Success",
       customer: result.recordset,
     };
   } catch (err) {
-    return { response: err };
-  }
-};
-
-export const selectAllCustomer = async (filter: string) => {
-  try {
-    let pool = await sql.connect(devConfig);
-    let result = await pool
-      .request()
-      .input("filter", sql.NVarChar, filter)
-      .query(
-        `
-          SELECT ${customerMainColumn}
-          FROM DevelopERP_ForTesting..Customer c
-          WHERE c.customer_name LIKE @filter
-        `
-      );
     return {
-      customer: result.recordset,
+      status: 0,
+      message: err instanceof MSSQLError ? err.originalError?.message : err,
     };
-  } catch (err) {
-    return { response: err };
   }
 };
 
-export const selectIndividualCustomer = async (customer_id: string) => {
+export const selectIndividualCustomer = async (customer_id: number) => {
   try {
     let pool = await sql.connect(devConfig);
     let result = await pool
@@ -95,90 +73,68 @@ export const selectIndividualCustomer = async (customer_id: string) => {
         WHERE vc.customer_id = @customer_id
         `
       );
-       //adjlskfjk;sadljfjksldfa
+
     if (Array.isArray(result.recordsets)) {
       return {
-        customer: result.recordsets[0],
-        person: result.recordsets[1],
-        contact: result.recordsets[2],
-        address: result.recordsets[3],
-        fleet: result.recordsets[4],
-        vehicle: result.recordsets[5],
+        status: 1,
+        message: "",
+        response: {
+          customer: result.recordsets[0],
+          person: result.recordsets[1],
+          contact: result.recordsets[2],
+          address: result.recordsets[3],
+          fleet: result.recordsets[4],
+          vehicle: result.recordsets[5],
+        },
       };
     }
   } catch (err) {
-    return { response: err };
-  }
-};
-
-// ลองทำ insert customer ใหม่พร้อมกับข้อมูล บุคคล ที่อยู่ การติดต่อ
-// หน้าตาคงประมาณนี้
-// {customer: {customer_id:, customer_name:, sales_type_code_id, customer_type_code_id}
-//  personExist: id
-//  personNew: {firstname:, lastname:, title_code_id:, }
-//  personDelete:
-//  addressExist: id 
-//  addressNew: {..}
-//  addressDelete:
-//  contactExist: id
-//  contactNew: {contact_type_code_id:, value:}
-//  contactDelete: id 
-//}
-
-export const insertCustomer = async (filter: string, page: string) => {
-  try {
-    let pool = await sql.connect(devConfig);
-    let result = await pool
-      .request()
-      .input("filter", sql.NVarChar, filter)
-      .input("page", sql.Int, page)
-      .query(
-        `
-      
-        `
-      );
     return {
-      customer: result.recordset,
+      status: 0,
+      message: err instanceof MSSQLError ? err.originalError?.message : err,
     };
-  } catch (err) {
-    return { response: err };
   }
 };
 
-export const updateCustomer = async (filter: string, page: string) => {
+export const insertCustomer = async (body: InsertCustomer) => {
+  const pool = await sql.connect(devConfig);
+  const transaction = new sql.Transaction(pool);
   try {
-    let pool = await sql.connect(devConfig);
-    let result = await pool
+    await transaction.begin();
+
+    const customer = body.customer;
+    await transaction
       .request()
-      .input("filter", sql.NVarChar, filter)
-      .input("page", sql.Int, page)
+      .input("customer_name", sql.NVarChar, customer.customer_name)
+      .input("customer_type_code_id", sql.Int, customer.customer_type_code_id)
+      .input("sales_type_code_id", sql.Int, customer.sales_type_code_id)
       .query(
-        `
-      
-        `
+        "EXEC DevelopERP_ForKrit..insert_customer @customer_name, @customer_type_code_id, @sales_type_code_id"
       );
+
+    const personExist = body.personExist;
+    for (const personId of personExist) {
+      // await transaction.request().input()
+    }
+
+    const contactNew = body.contactNew;
+    for (const contactData of contactNew) {
+    }
+
+    await transaction.commit();
+
+    return { status: 1, message: "Inserted successfully" };
+  } catch (err) {
+    await transaction.rollback();
     return {
-      customer: result.recordset,
+      status: 0,
+      message: err instanceof MSSQLError ? err.originalError?.message : err,
     };
-  } catch (err) {
-    return { response: err };
+  } finally {
+    await pool.close();
   }
 };
 
-export const deleteCustomer = async (filter: string, page: string) => {
-  try {
-    let pool = await sql.connect(devConfig);
-    let result = await pool
-      .request()
-      .input("filter", sql.NVarChar, filter)
-      .input("page", sql.Int, page)
-      .query(
-        `
-        
-        `
-      );
-    return {};
-  } catch (err) {
-    return { response: err };
-  }
-};
+export const updateCustomer = async (filter: string, page: string) => {};
+
+export const deleteCustomer = async (filter: string, page: string) => {};

@@ -1,112 +1,76 @@
 import { Request, Response } from "express";
 import {
-  selectAllCustomer,
+  insertCustomer,
   selectCustomer,
   selectIndividualCustomer,
 } from "../models/customer.model";
 
 export const getCustomer = async (req: Request, res: Response) => {
   try {
-    console.log("GET /customer");
-
     const query = req.query;
-    const filter = `%${query.filter}%`;
-    const page = query.page;
+    const filter = (query.filter as string) ?? "";
+    const page = query.page ? Number(query.page) : null;
+    console.log(filter, page);
 
-    if (typeof query.filter === "string" && typeof page === "string") {
-      let data = await selectCustomer(filter, page);
-      console.log("selectCustomer Success");
-      return res.status(200).json(data);
-    } else if (
-      typeof query.filter === "string" &&
-      typeof page === "undefined"
-    ) {
-      let data = await selectAllCustomer(filter);
-      console.log("selectAllCustomer Success");
-      return res.status(200).json(data);
-    }
-    console.log(page, filter);
-    throw new Error("ใส่ page มาด้วยนะแจ๊ะ");
+    let data = await selectCustomer(filter, page);
+    return res.json(data);
   } catch (err) {
     if (err instanceof Error) {
       console.log("Failed");
 
-      return res.status(404).json({ Error: err.message });
+      return res.json({ Error: err.message });
     }
   }
 };
 
 export const getIndividualCustomer = async (req: Request, res: Response) => {
   try {
-    console.log("GET /customer/:customer_id");
     const params = req.params;
-    const customer_id: string = params.customer_id;
+    const customer_id: number = Number(params.customer_id);
 
-    if (customer_id) {
-      let data = await selectIndividualCustomer(customer_id);
-      return res.status(200).json(data);
-    }
-
-    throw new Error("Something Went Wrong");
+    let data = await selectIndividualCustomer(customer_id);
+    return res.status(200).json(data);
   } catch (err) {
     if (err instanceof Error) {
-      console.log("Failed");
-
-      return res.status(404).json({ Error: err.message });
+      return res.json({ Error: err.message });
     }
   }
 };
 
 export const postCustomer = async (req: Request, res: Response) => {
   try {
-    console.log("POST /customer");
+    const body = req.body;
 
-    console.log("Success");
+    const result = await insertCustomer(body);
 
-    return res.status(200).json();
-
-    throw new Error("ใส่ filter หรือ page มาด้วยนะแจ๊ะ");
+    return res.json(result);
   } catch (err) {
     if (err instanceof Error) {
-      console.log("Failed");
-
-      return res.status(404).json({ Error: err.message });
+      return res.json({ Error: err.message });
     }
   }
 };
 
 export const putCustomer = async (req: Request, res: Response) => {
   try {
-    console.log("POST /customer");
-
-    console.log("Success");
-
-    return res.status(200).json();
-
-    throw new Error("ใส่ filter หรือ page มาด้วยนะแจ๊ะ");
+    return res.json();
   } catch (err) {
     if (err instanceof Error) {
-      console.log("Failed");
-
-      return res.status(404).json({ Error: err.message });
+      return res.json({ Error: err.message });
     }
   }
 };
 
 export const deleteCustomer = async (req: Request, res: Response) => {
   try {
-    console.log("POST /customer");
 
-    console.log("Success");
+    return res.json();
 
-    return res.status(200).json();
-
-    throw new Error("ใส่ filter หรือ page มาด้วยนะแจ๊ะ");
   } catch (err) {
     if (err instanceof Error) {
       console.log("Failed");
 
-      return res.status(404).json({ Error: err.message });
+      return res.json({ Error: err.message });
     }
   }
 };

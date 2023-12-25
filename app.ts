@@ -1,4 +1,4 @@
-import express from "express";
+import express, { NextFunction } from "express";
 import { customerRoute } from "./routes/customer.route";
 import { masterCodeRoute } from "./routes/masterCode.route";
 import { personRoute } from "./routes/person.route";
@@ -12,12 +12,16 @@ import { deviceSerialRoute } from "./routes/deviceSerial.route";
 import { fleetRoute } from "./routes/fleet.route";
 
 const app = express();
-const port = 3000;
+const port = 5000;
 
 app.use(cors());
 app.use(express.json()); // for parsing application/json
 app.use(express.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
 
+app.use((req, _res, next) => {
+  console.log(`${new Date().toLocaleString()} ${req.method} ${req.url}`);
+  next();
+});
 // app.use(authenticationRoute);
 app.use("/customer", customerRoute);
 app.use("/person", personRoute);

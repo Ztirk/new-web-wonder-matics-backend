@@ -1,8 +1,7 @@
-import sql from "mssql";
+import sql, { MSSQLError } from "mssql";
 import { devConfig } from "../config/devDb.config";
-import { addressMainColumn } from "../utils/address.mainColumn";
 
-export const selectAddress = async (filter: string, page: string) => {
+export const selectAddress = async (filter: string, page: number | null) => {
   try {
     let pool = await sql.connect(devConfig);
     let result = await pool
@@ -12,7 +11,22 @@ export const selectAddress = async (filter: string, page: string) => {
       .query(
         `
         WITH Address AS (
-            SELECT ${addressMainColumn}
+            SELECT ROW_NUMBER() OVER(
+              ORDER BY a.Address_id ASC
+          ) no,
+          a.address_id,
+          COALESCE(a.name + ' ', '') + COALESCE(a.house_no + ' ', '') + COALESCE(a.village_no + ' ', '') + COALESCE(a.alley + ' ', '') + COALESCE(a.road + ' ', '') + COALESCE(a.sub_district + ' ', '') + COALESCE(a.district + ' ', '') + COALESCE(a.province + ' ', '') + COALESCE(a.postal_code, '') location,
+          STUFF(
+              (
+                  SELECT ', ' + mc.value
+                  FROM DevelopERP_ForTesting..Address_MasterCode amc
+                      INNER JOIN DevelopERP_ForTesting..MasterCode mc ON amc.address_type_code_id = mc.code_id
+                  WHERE amc.address_id = a.address_id FOR XML PATH('')
+              ),
+              1,
+              2,
+              ''
+          ) address_type
             FROM DevelopERP_ForTesting..Address a
             WHERE COALESCE(a.name + ' ', '') + COALESCE(a.house_no + ' ', '') + COALESCE(a.village_no + ' ', '') + COALESCE(a.alley + ' ', '') + COALESCE(a.road + ' ', '') + COALESCE(a.sub_district + ' ', '') + COALESCE(a.district + ' ', '') + COALESCE(a.province + ' ', '') + COALESCE(a.postal_code, '') LIKE @filter
         )
@@ -22,9 +36,16 @@ export const selectAddress = async (filter: string, page: string) => {
         `
       );
     return {
-      address: result.recordset,
+      response: {
+        status: 1,
+        message: "Success",
+        address: result.recordset,
+      },
     };
   } catch (err) {
-    return { response: err };
+    return {
+      status: 0,
+      message: err instanceof MSSQLError ? err.originalError?.message : err,
+    };
   }
 };
